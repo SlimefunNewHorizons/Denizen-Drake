@@ -136,11 +136,16 @@ public class BlockHelperImpl implements BlockHelper {
 
     @Override
     public void setNbtData(Block block, CompoundBinaryTag ctag) {
+        BlockEntity blockEntity = getBlockEntity(block);
+        if (blockEntity == null) {
+            LegacyBedNbt.archive(block, ctag);
+            return;
+        }
         CompoundTag nmsData = NBTAdapter.toNMS(ctag);
         nmsData.putInt("x", block.getX());
         nmsData.putInt("y", block.getY());
         nmsData.putInt("z", block.getZ());
-        Handler.useValueInput(nmsData, getBlockEntity(block)::loadWithComponents);
+        Handler.useValueInput(nmsData, blockEntity::loadWithComponents);
     }
 
     @Override

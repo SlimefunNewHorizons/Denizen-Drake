@@ -12,15 +12,20 @@ An implementation of the Denizen Scripting Language for Spigot servers, with str
   completa para 26.2; el build multiversion original permanece como predeterminado.
 - El pegado aborta al primer fallo: cancela la tarea, restaura la bandera de
   fisica anterior y libera el lector/espera sin pegar entidades del callback de exito.
-- No hay rollback de bloques ya colocados ni se omite el NBT que falla.
-- La distribucion arranco en Purpur 26.2-138 con Java 25. Once regresiones
-  unitarias pasan; el ensayo en servidor sigue **rojo**: 44 NPE al aplicar NBT
-  antiguo a camas y una comparacion de items de cofre fallida, aun inconclusa.
-  PDC sintetico y cancelacion del pegado si pasan. No esta instalado en Dallas
-  ni validado en 1.21.11. La lista anterior corresponde a upstream.
-- Causa reproducida: en 26.2 las camas ya no son entidades de bloque
-  ([Paper](https://papermc.io/news/26-2/)). Omitir todo su NBT perderia posibles
-  datos personalizados: hace falta una migracion que los conserve.
+- No hay rollback de bloques ya colocados. Destinos sin entidad de bloque se
+  rechazan con un error explicito, salvo NBT identificado como cama sobre una cama.
+- En 26.2 las camas perdieron su entidad y PDC ([Paper](https://papermc.io/news/26-2/)).
+  El port conserva el NBT completo en el PDC del chunk bajo
+  `denizen:legacy_bed_nbt/<x>_<y>_<z>/<sha256>`, como NBT nombrado gzip.
+  Incluye etiquetas desconocidas y datos personalizados originales. Los registros
+  de contenidos diferentes se conservan; un conflicto aborta sin sobrescribir.
+  Este archivo permite recuperar los datos: no devuelve PDC a la cama ni cambia
+  las APIs de otros plugins. No se elimina automaticamente al romper el bloque.
+- Solo cambia NMS 26.2; la ruta NMS 1.21.11 permanece original. La distribucion
+  no esta instalada en Dallas; los resultados del ensayo se registran en
+  `plugin/src/test/server/README.md`: 11 pruebas unitarias y ensayo real26.2
+  con58 registros NBT, inventario/PDC y persistencia verdes; dos esquemas v3
+  siguen sin ensayar. No se declara reparada la instancia viva de Dallas.
 
 **Learn about Denizen from the Beginner's guide:** https://guide.denizenscript.com/guides/background/index.html
 
