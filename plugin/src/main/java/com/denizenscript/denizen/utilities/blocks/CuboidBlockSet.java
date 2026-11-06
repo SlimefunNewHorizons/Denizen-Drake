@@ -305,20 +305,33 @@ public class CuboidBlockSet implements BlockSet {
             int index = 0;
             @Override
             public void run() {
+                boolean previousNoPhys = SchematicCommand.noPhys;
                 SchematicCommand.noPhys = true;
-                long start = CoreUtilities.monotonicMillis();
-                while (index < goal) {
-                    int z = index % (z_height);
-                    int y = ((index - z) % (y_length * z_height)) / z_height;
-                    int x = (index - y - z) / (y_length * z_height);
-                    setBlockSingle(blocks[index], x, y, z, input);
-                    index++;
-                    if (CoreUtilities.monotonicMillis() - start > maxDelayMs) {
-                        SchematicCommand.noPhys = false;
-                        return;
+                try {
+                    long start = CoreUtilities.monotonicMillis();
+                    while (index < goal) {
+                        int z = index % (z_height);
+                        int y = ((index - z) % (y_length * z_height)) / z_height;
+                        int x = (index - y - z) / (y_length * z_height);
+                        setBlockSingle(blocks[index], x, y, z, input);
+                        index++;
+                        if (CoreUtilities.monotonicMillis() - start > maxDelayMs) {
+                            return;
+                        }
                     }
                 }
-                SchematicCommand.noPhys = false;
+                catch (RuntimeException | Error ex) {
+                    cancel();
+                    // Releasing a waitable may immediately run another script.
+                    SchematicCommand.noPhys = previousNoPhys;
+                    if (input.onError != null) {
+                        input.onError.run();
+                    }
+                    throw ex;
+                }
+                finally {
+                    SchematicCommand.noPhys = previousNoPhys;
+                }
                 cancel();
                 if (runme != null) {
                     runme.run();
@@ -329,17 +342,22 @@ public class CuboidBlockSet implements BlockSet {
 
     @Override
     public void setBlocks(InputParams input) {
+        boolean previousNoPhys = SchematicCommand.noPhys;
         SchematicCommand.noPhys = true;
-        int index = 0;
-        for (int x = 0; x < x_width; x++) {
-            for (int y = 0; y < y_length; y++) {
-                for (int z = 0; z < z_height; z++) {
-                    setBlockSingle(blocks[index], x, y, z, input);
-                    index++;
+        try {
+            int index = 0;
+            for (int x = 0; x < x_width; x++) {
+                for (int y = 0; y < y_length; y++) {
+                    for (int z = 0; z < z_height; z++) {
+                        setBlockSingle(blocks[index], x, y, z, input);
+                        index++;
+                    }
                 }
             }
         }
-        SchematicCommand.noPhys = false;
+        finally {
+            SchematicCommand.noPhys = previousNoPhys;
+        }
     }
 
     public void rotateEntitiesOne() {

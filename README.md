@@ -5,6 +5,16 @@ An implementation of the Denizen Scripting Language for Spigot servers, with str
 
 **Version 1.3.4**: Compatible with Spigot 1.17.1, 1.18.2, 1.19.4, 1.20.6, 1.21.11, 26.1.2, 26.2, and 26.3!
 
+### Estado del fork DrakesCraft (#676)
+
+- El modulo `plugin` se prueba con JDK 25 mediante `build_seguro.sh`.
+- El pegado aborta al primer fallo: cancela la tarea, restaura la bandera de
+  fisica anterior y libera el lector/espera sin pegar entidades del callback de exito.
+- No hay rollback de bloques ya colocados ni se omite el NBT que falla.
+- Esta correccion aun no esta instalada ni validada en Paper 1.21.11/26.2.
+  Falta construir la distribucion con NMS y reproducir el origen de la entidad
+  de bloque ausente. La lista de versiones anterior corresponde a upstream.
+
 **Learn about Denizen from the Beginner's guide:** https://guide.denizenscript.com/guides/background/index.html
 
 #### Download Links:

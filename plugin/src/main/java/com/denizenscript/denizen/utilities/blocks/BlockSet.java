@@ -21,6 +21,9 @@ public interface BlockSet {
         public List<PlayerTag> fakeTo;
 
         public DurationTag fakeDuration;
+
+        /** Cleanup after a delayed paste aborts; never a success/entity callback. */
+        public Runnable onError;
     }
 
     FullBlockData[] getBlocks();

@@ -512,17 +512,31 @@ public class SchematicCommand extends AbstractCommand implements Holdable, Liste
                     Consumer<CuboidBlockSet> pasteRunnable = (schematic) -> {
                         if (delayed) {
                             schematic.readingProcesses++;
-                            schematic.setBlocksDelayed(() -> {
+                            Runnable finishPaste = () -> {
                                 try {
-                                    if (copyEntities) {
-                                        schematic.pasteEntities(location);
-                                    }
+                                    scriptEntry.setFinished(true);
                                 }
                                 finally {
-                                    scriptEntry.setFinished(true);
                                     schematic.readingProcesses--;
                                 }
-                            }, input, maxDelayMs.asLong());
+                            };
+                            input.onError = finishPaste;
+                            try {
+                                schematic.setBlocksDelayed(() -> {
+                                    try {
+                                        if (copyEntities) {
+                                            schematic.pasteEntities(location);
+                                        }
+                                    }
+                                    finally {
+                                        finishPaste.run();
+                                    }
+                                }, input, maxDelayMs.asLong());
+                            }
+                            catch (RuntimeException | Error ex) {
+                                finishPaste.run();
+                                throw ex;
+                            }
                         }
                         else {
                             schematic.setBlocks(input);
