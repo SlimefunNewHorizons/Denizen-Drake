@@ -1,0 +1,5 @@
+name: DenizenBlockNbtSmoke
+version: '1'
+main: DenizenBlockNbtSmoke
+api-version: '1.21'
+depend: [Denizen]

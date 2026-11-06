@@ -7,13 +7,20 @@ An implementation of the Denizen Scripting Language for Spigot servers, with str
 
 ### Estado del fork DrakesCraft (#676)
 
-- El modulo `plugin` se prueba con JDK 25 mediante `build_seguro.sh`.
+- El perfil `runtime-26.2` construye `plugin`, `paper`, `v26_2` y `dist` con
+  JDK 25, API Spigot 26.2 y Paper 26.2.build.129-stable. Produce una distribucion
+  completa para 26.2; el build multiversion original permanece como predeterminado.
 - El pegado aborta al primer fallo: cancela la tarea, restaura la bandera de
   fisica anterior y libera el lector/espera sin pegar entidades del callback de exito.
 - No hay rollback de bloques ya colocados ni se omite el NBT que falla.
-- Esta correccion aun no esta instalada ni validada en Paper 1.21.11/26.2.
-  Falta construir la distribucion con NMS y reproducir el origen de la entidad
-  de bloque ausente. La lista de versiones anterior corresponde a upstream.
+- La distribucion arranco en Purpur 26.2-138 con Java 25. Once regresiones
+  unitarias pasan; el ensayo en servidor sigue **rojo**: 44 NPE al aplicar NBT
+  antiguo a camas y una comparacion de items de cofre fallida, aun inconclusa.
+  PDC sintetico y cancelacion del pegado si pasan. No esta instalado en Dallas
+  ni validado en 1.21.11. La lista anterior corresponde a upstream.
+- Causa reproducida: en 26.2 las camas ya no son entidades de bloque
+  ([Paper](https://papermc.io/news/26-2/)). Omitir todo su NBT perderia posibles
+  datos personalizados: hace falta una migracion que los conserve.
 
 **Learn about Denizen from the Beginner's guide:** https://guide.denizenscript.com/guides/background/index.html
 
@@ -43,6 +50,29 @@ An implementation of the Denizen Scripting Language for Spigot servers, with str
 
 - Built against JDK 17, using maven `pom.xml` as project file.
 - Requires building all listed versions of Spigot via Spigot BuildTools: https://www.spigotmc.org/wiki/buildtools/
+
+For the isolated 26.2 distribution, install **Spigot 26.2** with BuildTools first,
+then run with JDK 25 (the other Spigot server versions are not needed):
+
+```sh
+mvn -Pruntime-26.2 -DBUILD_NUMBER=676 -DBUILD_CLASS=CUSTOM clean package
+```
+
+On Star, wrap that command in `~/ai-hub/scripts/build_seguro.sh 25 "$PWD"`.
+The output is `target/Denizen-1.3.4-b676-CUSTOM.jar`, including DenizenCore,
+the Paper integration and NMS 26.2. Its manifest declares Mojang mappings and
+`Denizen-Runtime: 26.2`. This profile is **26.2 only**, not a universal runtime.
+The default build still includes all eight upstream NMS modules/dependencies.
+
+`plugin/src/test/server/DenizenBlockNbtSmoke.java` is a separate test plugin,
+compiled against the shaded distribution and the server API/libraries. Package
+it with its adjacent `plugin.yml`; never include it in the gameplay jar.
+It refuses to run unless the server binds to `127.0.0.1`, has no players and
+contains only the disposable world `smoke676`. It checks chest items/PDC and
+cancellation of a deliberately invalid delayed paste, then shuts down the test
+server. Optional local `.schem` copies in `fixtures/` exercise v2 block entities;
+Sponge v3 is counted as skipped, not reported as supported. No schematics or
+player data are distributed in this repository.
 
 ### Maven
 
